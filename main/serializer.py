@@ -46,10 +46,6 @@ class ForsaleSerializer(serializers.ModelSerializer):
         model = Forsale
         fields = '__all__'
 
-class BestsellSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Bestsell
-        fields = '__all__'
 
 class LatestblogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -59,6 +55,11 @@ class LatestblogSerializer(serializers.ModelSerializer):
 class NewsletterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Newsletter
+        fields = '__all__'
+
+class PurchaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Purchase
         fields = '__all__'
 
 class TeamMembersSerializer(serializers.ModelSerializer):

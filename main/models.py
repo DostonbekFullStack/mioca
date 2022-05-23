@@ -46,11 +46,11 @@ class Categorie(models.Model):
         return self.name
 
 class Product(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='media/products/')
     name = models.CharField(max_length=255)
     category = models.ForeignKey(Categorie, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    newprice = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     rating = models.IntegerField(default=0)
 
     def __str__(self):
@@ -67,8 +67,12 @@ class Card(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0)
-    def __str__(self):
-        return self.user.name
+
+
+class Purchase(models.Model):
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    summa = models.IntegerField(default=0)
+
 
 class Facilities(models.Model):
     image = models.ImageField(upload_to='media/facilities/')
@@ -83,13 +87,6 @@ class Forsale(models.Model):
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     oldprice = models.DecimalField(max_digits=6, decimal_places=2)
-
-    def __str__(self):
-        return self.title
-
-class Bestsell(models.Model):
-    image = models.ImageField(upload_to='media/bestsell/')
-    title = models.CharField(max_length=255)
 
     def __str__(self):
         return self.title

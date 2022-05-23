@@ -1,9 +1,12 @@
+from msilib.schema import ListView
+from re import S
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import permission_classes, authentication_classes, api_view
+from rest_framework.decorators import permission_classes, authentication_classes, api_view, APIView
+from rest_framework import status
 from .serializer import *
 from .models import *
 
@@ -117,7 +120,36 @@ def CategoryPOST(request):
 class ProductGET(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+class ProductReveiw(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def retrieve(self, request, pk):
+        product = Product.objects.get(id=pk)
+        ser = ProductSerializer(product, many=False)
+        return Response(ser.data)
     
+    def update(self, request, pk):
+        try:
+            product = Product.objects.get(id=pk)
+            ser = ProductSerializer(product, data=request.data)
+            if ser.is_valid():
+                ser.save()
+                return Response('changed')
+            else:
+                return Response('error')
+        except Exception as err:
+            data = {
+                'error': f"{err}"
+            }
+            return Response(data)
+    
+    def destroy(self, request, pk):
+        todo = Product.objects.get(id=pk)
+        todo.delete()
+        return Response('deleted')
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([TokenAuthentication])
@@ -143,7 +175,36 @@ def ProductPOST(request):
 class WishlistGET(ListAPIView):
     queryset = Wishlist.objects.all()
     serializer_class = WishlistSerializer
+
+class WishlistReveiw(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def retrieve(self, request, pk):
+        wishlist = Wishlist.objects.get(product_id=pk)
+        ser = WishlistSerializer(wishlist, many=False)
+        return Response(ser.data)
     
+    def update(self, request, pk):
+        try:
+            Wishlist = Wishlist.objects.get(product_id=pk)
+            ser = WishlistSerializer(Wishlist, data=request.data)
+            if ser.is_valid():
+                ser.save()
+                return Response('changed')
+            else:
+                return Response('error')
+        except Exception as err:
+            data = {
+                'error': f"{err}"
+            }
+            return Response(data)
+    
+    def destroy(self, request, pk):
+        todo = Wishlist.objects.get(id=pk)
+        todo.delete()
+        return Response('deleted')
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([TokenAuthentication])
@@ -161,6 +222,35 @@ def WishlistPOST(request):
             'msg': "unfortunately your request hasn't accepted"
         }
         return Response(data)
+
+class CardReveiw(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def retrieve(self, request, pk):
+        card = Card.objects.get(id=pk)
+        ser = CardSerializer(card, many=False)
+        return Response(ser.data)
+    
+    def update(self, request, pk):
+        try:
+            card = Card.objects.get(product_id=pk)
+            ser = CardSerializer(card, data=request.data)
+            if ser.is_valid():
+                ser.save()
+                return Response('changed')
+            else:
+                return Response('error')
+        except Exception as err:
+            data = {
+                'error': f"{err}"
+            }
+            return Response(data)
+    
+    def destroy(self, request, pk):
+        todo = Card.objects.get(id=pk)
+        todo.delete()
+        return Response('deleted')
 
 class CardGET(ListAPIView):
     queryset = Card.objects.all()
@@ -245,31 +335,13 @@ def ForsalePOST(request):
 # ##################################
 
 class BestsellGET(ListAPIView):
-    queryset = Bestsell.objects.all()
-    serializer_class = BestsellSerializer
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
     
     def list(request, self):
-        bestsell = Bestsell.objects.all().order_by('-id')[0:4]
-        ser = BestsellSerializer(bestsell, many=False)
+        Product = Product.objects.filter(rating__gte=4)[0:4]
+        ser = ProductSerializer(Product, many=True)
         return Response(ser.data)
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
-def BestsellPOST(request):
-    try:
-        serializer = BestsellSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('success')
-        else:
-            return Response("unfortunately your request hasn't accepted")
-    except Exception as err:
-        data = {
-            'error': f"{err}",
-            'msg': "unfortunately your request hasn't accepted"
-        }
-        return Response(data)
 
 # ###################################
 # ##################################
@@ -441,3 +513,18 @@ def Search(request):
     product = Product.objects.get(name__icontains=name)
     pro = ProductSerializer(product)
     return Response(pro.data)
+
+
+class PurchaseViews(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+
+    def create(request):
+        user = request.user
+        if user.type == 3:
+            serializer = PurchaseSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response('success')
