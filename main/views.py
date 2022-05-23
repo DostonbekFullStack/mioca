@@ -123,12 +123,16 @@ class ProductGET(ListAPIView):
 @authentication_classes([TokenAuthentication])
 def ProductPOST(request):
     try:
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('success')
+        user = request.user
+        if user.type == 2:
+            serializer = ProductSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response('success')
+            else:
+                return Response("unfortunately your request hasn't accepted")
         else:
-            return Response("unfortunately your request hasn't accepted")
+            return Response("unfortunately your request won't be accepted")
     except Exception as err:
         data = {
             'error': f"{err}",
