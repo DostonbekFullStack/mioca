@@ -515,16 +515,17 @@ def Search(request):
     return Response(pro.data)
 
 
-class PurchaseViews(ListCreateAPIView):
+class PurchaseGET(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
 
-    def create(request):
-        user = request.user
-        if user.type == 3:
-            serializer = PurchaseSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response('success')
+@api_view(['POST'])
+def PurchasePOST(request):
+    user = request.user
+    if user.type == 3:
+        serializer = PurchaseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response('success')
