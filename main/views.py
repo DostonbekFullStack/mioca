@@ -1,5 +1,3 @@
-from msilib.schema import ListView
-from re import S
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
@@ -521,11 +519,40 @@ class PurchaseGET(ListCreateAPIView):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
 
-@api_view(['POST'])
-def PurchasePOST(request):
-    user = request.user
-    if user.type == 3:
-        serializer = PurchaseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('success')
+@api_view(["POST"])
+def Purchasing(request):
+    try:
+        user = request.user
+        if user.type == 3:
+            box = []
+            card = request.POST.get('card')
+            summa = int(request.POST.get('summa'))
+            Purchase.objects.create(card_id=card, summa=summa)
+            purchase = Purchase.objects.filter(card__user=user)
+            sum = 0
+            for i in purchase:
+                sum = i.card.quantity * i.card.product.price
+                i.save()
+                debt = sum - summa
+                if debt < 0:
+                    debt = debt * (-1)
+                    data = {
+                        'items': i.card.product.name,
+                        'quanity': i.card.quantity,
+                        'summa': sum,
+                        'pul': debt
+                    }
+                else:
+                    data = {
+                        'items': i.card.product.name,
+                        'quanity': i.card.quantity,
+                        'summa': sum,
+                        'pul': debt
+                    }
+                box.append(data)
+            return Response(box)
+    except Exception as err:
+        data = {
+            'error': f"{err}"
+        }
+        return Response(data)

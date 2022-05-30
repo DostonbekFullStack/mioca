@@ -20,7 +20,7 @@ urlpatterns = [
     path('api/cardpost/', CardPOST),
     path('api/card/product/<int:pk>', CardReveiw.as_view()),
     path('api/purchaseget/', PurchaseGET.as_view()),
-    path('api/purchasepost/', PurchasePOST),
+    path('api/purchasepost/', Purchasing),
     path('api/facilitiesget/', FacilitiesGET.as_view()),
     path('api/facilitiespost/', FacilitiesPOST),
     path('api/forsaleget/', ForsaleGET.as_view()),

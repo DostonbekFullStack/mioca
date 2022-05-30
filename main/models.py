@@ -140,3 +140,10 @@ class LeaveMsg(models.Model):
 
 class Map(models.Model):
     link = models.CharField(max_length=500)
+
+
+# Casa
+
+class Casa(models.Model):
+    casa = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
