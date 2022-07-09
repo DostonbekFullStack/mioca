@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.core.validators import MaxValueValidator, MinValueValidator 
 # Create your models here.
 
 # HOME 1
@@ -45,13 +45,27 @@ class Categorie(models.Model):
     def __str__(self):
         return self.name
 
-class Product(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='media/products/')
+class Production(models.Model):
+    quantity = models.IntegerField(default=0)
     name = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='media/products/')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Categorie, on_delete=models.CASCADE)
+
+
+class Product(models.Model):
+    production = models.ForeignKey(Production, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    rating = models.IntegerField(default=0)
+    rating = models.IntegerField(default=1,
+        validators=[MinValueValidator(1),
+        MaxValueValidator(5)
+    ])
+    discount = models.IntegerField(default=0,
+        validators=[
+        MinValueValidator(0),
+        MaxValueValidator(100)
+    ])
 
     def __str__(self):
         return self.name
