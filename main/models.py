@@ -64,8 +64,9 @@ class Wishlist(models.Model):
         return self.user.name
 
 class Card(models.Model):
+    purchased = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True,null=True)
     quantity = models.IntegerField(default=0)
 
 

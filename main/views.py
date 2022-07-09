@@ -260,12 +260,16 @@ class CardGET(ListAPIView):
 @authentication_classes([TokenAuthentication])
 def CardPOST(request):
     try:
-        serializer = CardSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response('success')
-        else:
-            return Response("unfortunately your request hasn't accepted")
+        user = request.user
+        if user.type == 3:
+            product = int(request.POST.get('product'))
+            quantity = int(request.POST.get('quantity'))
+            Card.objects.create(user=user, product_id=product, quantity=quantity)
+            data = {
+                "product": product,
+                "quantity": quantity,
+            }
+            return Response(data)
     except Exception as err:
         data = {
             'error': f"{err}",
@@ -526,30 +530,35 @@ def Purchasing(request):
         if user.type == 3:
             box = []
             card = request.POST.get('card')
-            summa = int(request.POST.get('summa'))
+            summa = int(request.POST.get('summa')) # client puli
             Purchase.objects.create(card_id=card, summa=summa)
-            purchase = Purchase.objects.filter(card__user=user)
-            sum = 0
+            purchase = Purchase.objects.filter(card__user=user, card__purchased=False)
+            sum = 0 
             for i in purchase:
-                sum = i.card.quantity * i.card.product.price
+                sum = i.card.quantity * i.card.product.price # product summa
+                debt = summa - sum # hisob #
                 i.save()
-                debt = sum - summa
                 if debt < 0:
                     debt = debt * (-1)
                     data = {
-                        'items': i.card.product.name,
+                        'sotildi': 'Yoq',
+                        'product': i.card.product.name,
                         'quanity': i.card.quantity,
                         'summa': sum,
-                        'pul': debt
+                        'qarz': debt
                     }
                 else:
+                    i.card.purchased = True
+                    i.card.save()
                     data = {
-                        'items': i.card.product.name,
+                        'sotildi': 'Xa',
+                        'product': i.card.product.name,
                         'quanity': i.card.quantity,
                         'summa': sum,
-                        'pul': debt
+                        'haqi': debt
                     }
-                box.append(data)
+            box.append(data)
+            # Card.objects.create(user=user)
             return Response(box)
     except Exception as err:
         data = {
