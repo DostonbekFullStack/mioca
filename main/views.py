@@ -1,3 +1,4 @@
+from unicodedata import category
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
@@ -529,39 +530,69 @@ def Purchasing(request):
         user = request.user
         if user.type == 3:
             box = []
-            card = request.POST.get('card')
-            summa = int(request.POST.get('summa')) # client puli
-            Purchase.objects.create(card_id=card, summa=summa)
-            purchase = Purchase.objects.filter(card__user=user, card__purchased=False)
-            sum = 0 
-            for i in purchase:
-                sum = i.card.quantity * i.card.product.price # product summa
-                debt = summa - sum # hisob #
-                i.save()
-                if debt < 0:
-                    debt = debt * (-1)
-                    data = {
-                        'sotildi': 'Yoq',
-                        'product': i.card.product.name,
-                        'quanity': i.card.quantity,
-                        'summa': sum,
-                        'qarz': debt
-                    }
-                else:
-                    i.card.purchased = True
-                    i.card.save()
-                    data = {
-                        'sotildi': 'Xa',
-                        'product': i.card.product.name,
-                        'quanity': i.card.quantity,
-                        'summa': sum,
-                        'haqi': debt
-                    }
-            box.append(data)
-            # Card.objects.create(user=user)
+            cards = Card.objects.all()
+            if len(cards) > 0:
+                card = request.POST.get('card')
+                summa = int(request.POST.get('summa')) # client puli
+                Purchase.objects.create(card_id=card, summa=summa)
+                purchase = Purchase.objects.filter(card__user=user, card__purchased=False)
+                sum = 0 
+                for i in purchase:
+                    sum = i.card.quantity * i.card.product.price # product summa
+                    debt = summa - sum # hisob #
+                    i.save()
+                    if debt < 0:
+                        debt = debt * (-1)
+                        data = {
+                            'sotildi': 'Yoq',
+                            'product': i.card.product.name,
+                            'quanity': i.card.quantity,
+                            'summa': sum,
+                            'qarz': debt
+                        }
+                    else:
+                        print(i.card.product.quantity)
+                        i.card.product.quantity -= i.card.quantity
+                        i.card.purchased = True
+                        i.card.save()
+                        data = {
+                            'sotildi': 'Xa',
+                            'product': i.card.product.name,
+                            'quanity': i.card.quantity,
+                            'summa': sum,
+                            'haqi': debt
+                        }
+                box.append(data)
+            else:
+                Card.objects.create(user=user)
             return Response(box)
     except Exception as err:
         data = {
             'error': f"{err}"
         }
         return Response(data)
+
+class ProductionPost(APIView):
+    def post(self, request):
+        try:
+            user = request.user
+            if user.type == 2:
+                quantity = int(request.POST.get('quantity'))
+                name = str(request.POST.get('name'))
+                image = request.FILES('image')
+                category = int(request.POST.get('category'))
+                discount = int(request.POST.get('discount'))
+                Production.objects.create(user=user, quantity=quantity, name=name, image=image, category_id=category, discount=discount)
+                productss = Product.objects.all()
+                if len(productss)<0:
+                    Product.objects.create(user=user, quantity=quantity, name=name, image=image, category_id=category)
+                else:
+                    products = Product.objects.filter(name=name)
+                    for i in products:
+                        print(i.quantity)
+                        i.quantity =+ quantity
+                        i.save()
+            else:
+                return Response("You can't do it.")
+        except:
+            return Response(status.HTTP_400_BAD_REQUEST)
